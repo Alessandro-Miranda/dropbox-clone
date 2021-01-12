@@ -16,16 +16,17 @@ class DropboxController
     connectFirebase()
     {
         /* TODO: Add SDKs for Firebase products that you want to use
-         https://firebase.google.com/docs/web/setup#available-libraries */
+     https://firebase.google.com/docs/web/setup#available-libraries */
 
         // Your web app's Firebase configuration
         var firebaseConfig = {
             apiKey: "AIzaSyBpNiOtXKFMsooB8-YJ0Rar-NfgP-fd58U",
             authDomain: "dropbox-clone-4d4a7.firebaseapp.com",
+            databaseURL: "https://dropbox-clone-4d4a7-default-rtdb.firebaseio.com",
             projectId: "dropbox-clone-4d4a7",
             storageBucket: "dropbox-clone-4d4a7.appspot.com",
             messagingSenderId: "974255298130",
-            appId: "1:974255298130:web:d1f4c84cd4845b2879318b"
+            appId: "1:974255298130:web:6bf176824db6272279318b"
         };
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
@@ -37,11 +38,34 @@ class DropboxController
         });
 
         this.inputFilesEl.addEventListener('change', event => {
-            this.uploadTask(event.target.files);
+            this.btnSendFileEl.disabled = true;
+            this.uploadTask(event.target.files).then(responses => {
+                responses.forEach(resp => {
+                    
+                    this.getFirebaseRef().push().set(resp.files['input-file']);
+                });
+
+                this.uploadComplete();
+            }).catch(err => {
+                this.uploadComplete();
+                console.info(err);
+            });
+
             this.modalShow();
-            this.inputFilesEl.value = '';
         });
     }
+
+    uploadComplete()
+    {
+        this.modalShow(false);
+        this.inputFilesEl.value = '';
+        this.btnSendFileEl.disabled = false;
+    }
+    getFirebaseRef()
+    {
+        return firebase.database().ref('files');
+    }
+
     modalShow(show = true)
     {
         this.snackModalEl.style.display = show ? 'block' : 'none';
@@ -56,7 +80,6 @@ class DropboxController
                 ajax.open('POST', '/upload');
 
                 ajax.onload = () => {
-                    this.modalShow(false);
                     try
                     {
                         resolve(JSON.parse(ajax.responseText));
@@ -68,10 +91,9 @@ class DropboxController
                 };
 
                 ajax.onerror = e => {
-                    this.modalShow();
                     reject(e);
                 };
-                
+
                 // chama a função a cada modificação no progresso do upload dos arquivos
                 ajax.upload.onprogress = e => {
                     this.uploadProgress(e, file);
