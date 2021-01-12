@@ -8,9 +8,28 @@ class DropboxController
         this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg');
         this.fileNameEl = this.snackModalEl.querySelector('.filename');
         this.timeLeftEl = this.snackModalEl.querySelector('.timeleft');
+
+        this.connectFirebase();
         this.initEvents();
     }
 
+    connectFirebase()
+    {
+        /* TODO: Add SDKs for Firebase products that you want to use
+         https://firebase.google.com/docs/web/setup#available-libraries */
+
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyBpNiOtXKFMsooB8-YJ0Rar-NfgP-fd58U",
+            authDomain: "dropbox-clone-4d4a7.firebaseapp.com",
+            projectId: "dropbox-clone-4d4a7",
+            storageBucket: "dropbox-clone-4d4a7.appspot.com",
+            messagingSenderId: "974255298130",
+            appId: "1:974255298130:web:d1f4c84cd4845b2879318b"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    }
     initEvents()
     {
         this.btnSendFileEl.addEventListener('click', () => {
