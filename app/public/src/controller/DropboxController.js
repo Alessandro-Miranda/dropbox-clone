@@ -65,11 +65,11 @@ class DropboxController
         let timeSpent = Date.now() - this.startUploadTime;
         let loaded = event.loaded;
         let total = event.total;
-        let percent = parseInt((total / loaded) * 100);
+        let percent = parseInt((loaded * 100) / total);
         let timeLeft = ((100 - percent) * timeSpent) / percent;
 
         this.progressBarEl.style.width = `${percent}%`;
-        this.fileNameEl.innerHTML = files[0].name;
+        this.fileNameEl.innerHTML = files.name;
         this.timeLeftEl.innerHTML = this.formatTimeToHuman(timeLeft);
     }
 
@@ -78,8 +78,6 @@ class DropboxController
         let seconds = parseInt((duration / 1000) % 60);
         let minutes = parseInt((duration / (1000 * 60)) % 60);
         let hours = parseInt((duration / (1000 * 60 * 60)) % 24);
-
-        console.log(duration);
         
         if(hours > 0) 
         {
