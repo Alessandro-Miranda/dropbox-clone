@@ -19,10 +19,14 @@ class DropboxController
 
         this.inputFilesEl.addEventListener('change', event => {
             this.uploadTask(event.target.files);
-            this.snackModalEl.style.display = 'block';
+            this.modalShow();
+            this.inputFilesEl.value = '';
         })
     }
-
+    modalShow(show = true)
+    {
+        this.snackModalEl.style.display = show ? 'block' : 'none';
+    }
     uploadTask(files)
     {
         let promises = [];
@@ -33,6 +37,7 @@ class DropboxController
                 ajax.open('POST', '/upload');
 
                 ajax.onload = () => {
+                    this.modalShow(false);
                     try
                     {
                         resolve(JSON.parse(ajax.responseText));
@@ -43,7 +48,10 @@ class DropboxController
                     }
                 };
 
-                ajax.onerror = e => reject(e);
+                ajax.onerror = e => {
+                    this.modalShow();
+                    reject(e);
+                }
 
                 ajax.upload.onprogress = e => {
                     this.uploadProgress(e, file);
