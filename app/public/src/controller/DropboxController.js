@@ -6,6 +6,8 @@ class DropboxController
         this.inputFilesEl = document.querySelector("#files");
         this.snackModalEl = document.querySelector("#react-snackbar-root");
         this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg');
+        this.fileNameEl = this.snackModalEl.querySelector('.filename');
+        this.timeLeftEl = this.snackModalEl.querySelector('.timeleft');
         this.initEvents();
     }
 
@@ -44,11 +46,13 @@ class DropboxController
                 ajax.onerror = e => reject(e);
 
                 ajax.upload.onprogress = e => {
-                    this.uploadProgress(e, files);
+                    this.uploadProgress(e, file);
                 }
                 
                 let formData = new FormData();
                 formData.append('input-file', file);
+                
+                this.startUploadTime = Date.now();
                 ajax.send(formData);
             }));
         });
@@ -58,10 +62,42 @@ class DropboxController
 
     uploadProgress(event, files)
     {
+        let timeSpent = Date.now() - this.startUploadTime;
         let loaded = event.loaded;
         let total = event.total;
         let percent = parseInt((total / loaded) * 100);
+        let timeLeft = ((100 - percent) * timeSpent) / percent;
 
         this.progressBarEl.style.width = `${percent}%`;
+        this.fileNameEl.innerHTML = files[0].name;
+        this.timeLeftEl.innerHTML = this.formatTimeToHuman(timeLeft);
+    }
+
+    formatTimeToHuman(duration)
+    {
+        let seconds = parseInt((duration / 1000) % 60);
+        let minutes = parseInt((duration / (1000 * 60)) % 60);
+        let hours = parseInt((duration / (1000 * 60 * 60)) % 24);
+
+        console.log(duration);
+        
+        if(hours > 0) 
+        {
+            return `${hours} horas, ${minutes} minutos e ${seconds} segundos`;
+        }
+        
+        if(minutes > 0)
+        {
+            return `${minutes} minutos e ${seconds} segundos`;
+        }
+
+        if(seconds > 0)
+        {
+            return `${seconds} segundos`;
+        }
+        else
+        {
+            return '';
+        }
     }
 }
