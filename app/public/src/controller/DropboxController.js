@@ -40,7 +40,7 @@ class DropboxController
             this.uploadTask(event.target.files);
             this.modalShow();
             this.inputFilesEl.value = '';
-        })
+        });
     }
     modalShow(show = true)
     {
@@ -70,30 +70,32 @@ class DropboxController
                 ajax.onerror = e => {
                     this.modalShow();
                     reject(e);
-                }
-
+                };
+                
+                // chama a função a cada modificação no progresso do upload dos arquivos
                 ajax.upload.onprogress = e => {
                     this.uploadProgress(e, file);
-                }
+                };
                 
                 let formData = new FormData();
                 formData.append('input-file', file);
                 
-                this.startUploadTime = Date.now();
+                this.startUploadTime = Date.now(); // captura a data atual no momento do envio dos arquivos
                 ajax.send(formData);
             }));
         });
-
+        // pega o array com promisses e retorna o resolve se todas executarem com sucesso
         return Promise.all(promises);
     }
 
     uploadProgress(event, files)
     {
-        let timeSpent = Date.now() - this.startUploadTime;
+        let timeSpent = Date.now() - this.startUploadTime; // pega a diferença em timestamp entre o horário atual e o inicio do upload
         let loaded = event.loaded;
         let total = event.total;
-        let percent = parseInt((loaded * 100) / total);
-        let timeLeft = ((100 - percent) * timeSpent) / percent;
+        let percent = parseInt((loaded * 100) / total); // regra de 3 para calcular a porcentagem já enviada dos arquivos
+        /* calculo do tempo restante baseado na diferença do bits já enviados vezes o tempo gasto dividido pela porcentagem já enviada*/
+        let timeLeft = ((100 - percent) * timeSpent) / percent; 
 
         this.progressBarEl.style.width = `${percent}%`;
         this.fileNameEl.innerHTML = files.name;
