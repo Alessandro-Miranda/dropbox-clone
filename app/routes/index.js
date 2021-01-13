@@ -3,7 +3,7 @@ var router = express.Router();
 var formidable = require('formidable');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', function(_req, res, _next) {
   res.render('index', { title: 'Express' });
 });
 
