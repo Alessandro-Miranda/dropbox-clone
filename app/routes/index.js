@@ -3,7 +3,7 @@ var router = express.Router();
 var formidable = require('formidable');
 
 /* GET home page. */
-router.get('/', function(_req, res, _next) {
+router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
@@ -13,7 +13,7 @@ router.post('/upload', (req, res) => {
     keepExtensions: true // Mantém a extensão dos arquivos
   });
 
-  form.parse(req, (_err, _fields, files) => {
+  form.parse(req, (err, fields, files) => {
     res.json({
       files
     });
