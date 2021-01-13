@@ -8,9 +8,11 @@ class DropboxController
         this.progressBarEl = this.snackModalEl.querySelector('.mc-progress-bar-fg');
         this.fileNameEl = this.snackModalEl.querySelector('.filename');
         this.timeLeftEl = this.snackModalEl.querySelector('.timeleft');
+        this.listFilesEl = document.querySelector('#list-of-files-and-directories');
 
         this.connectFirebase();
         this.initEvents();
+        this.readFiles();
     }
 
     connectFirebase()
@@ -31,6 +33,7 @@ class DropboxController
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
     }
+
     initEvents()
     {
         this.btnSendFileEl.addEventListener('click', () => {
@@ -55,15 +58,16 @@ class DropboxController
         });
     }
 
+    getFirebaseRef()
+    {
+        return firebase.database().ref('files');
+    }
+
     uploadComplete()
     {
         this.modalShow(false);
         this.inputFilesEl.value = '';
         this.btnSendFileEl.disabled = false;
-    }
-    getFirebaseRef()
-    {
-        return firebase.database().ref('files');
     }
 
     modalShow(show = true)
@@ -320,13 +324,30 @@ class DropboxController
                 `;
         }
     }
-    getFileView()
+    getFileView(file, key)
     {
-        return `
-            <li>
-                ${this.getFileIconView(file)}
-                <div class="name text-center">${file.name}</div>
-            </li>
+        let li = document.createElement('li');
+        li.dataset.key = key;
+        li.innerHTML = `
+            ${this.getFileIconView(file)}
+            <div class="name text-center">${file.name}</div>
         `;
+
+        return li;
+    }
+
+    readFiles()
+    {
+        this.getFirebaseRef().on('value', snapshoot => {
+            
+            this.listFilesEl.innerHTML = '';
+            
+            snapshoot.forEach(snapshootItem => {
+                let key = snapshootItem.key;
+                let data = snapshootItem.val();
+                
+                this.listFilesEl.appendChild(this.getFileView(data, key));
+            });
+        });
     }
 }
