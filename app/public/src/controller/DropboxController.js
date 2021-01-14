@@ -9,10 +9,14 @@ class DropboxController
         this.fileNameEl = this.snackModalEl.querySelector('.filename');
         this.timeLeftEl = this.snackModalEl.querySelector('.timeleft');
         this.listFilesEl = document.querySelector('#list-of-files-and-directories');
+        this.btnNewFolder = document.querySelector('#btn-new-folder');
+        this.btnRename = document.querySelector('#btn-rename');
+        this.btnDelete = document.querySelector('#btn-delete');
 
         this.connectFirebase();
         this.initEvents();
         this.readFiles();
+        this.onSelectionChange = new Event('selectionChange');
     }
 
     connectFirebase()
@@ -34,8 +38,33 @@ class DropboxController
         firebase.initializeApp(firebaseConfig);
     }
 
+    getSelection()
+    {
+        return this.listFilesEl.querySelectorAll('.selected');
+    }
+
     initEvents()
     {
+        this.listFilesEl.addEventListener('selectionChange', () => {
+            
+            switch(this.getSelection().length)
+            {
+                case 0:
+                    this.btnDelete.style.display = 'none';
+                    this.btnRename.style.display = 'none';
+                break;
+
+                case 1:
+                    this.btnDelete.style.display = 'block';
+                    this.btnRename.style.display = 'block';
+                break;
+
+                default:
+                    this.btnDelete.style.display = 'block';
+                    this.btnRename.style.display = 'none';
+            }
+        });
+
         this.btnSendFileEl.addEventListener('click', () => {
             this.inputFilesEl.click();
         });
@@ -333,7 +362,51 @@ class DropboxController
             <div class="name text-center">${file.name}</div>
         `;
 
+        this.initEventsLi(li);
+
         return li;
+    }
+
+    initEventsLi(li)
+    {
+        li.addEventListener('click', e => {
+            
+            if(e.shiftKey)
+            {
+                let firstLi = this.listFilesEl.querySelector('li.selected');
+                let lis = li.parentElement.childNodes;
+                
+                if(firstLi)
+                {
+                    let indexStart, indexEnd;
+                    lis.forEach((el, index) => {
+                        if(firstLi === el) indexStart = index;
+                        if(li === el) indexEnd = index;
+                    });
+
+                    let index = [indexStart, indexEnd].sort();
+                    
+                    lis.forEach((element, i) => {
+                        if(i >= index[0] && i <= index[1])
+                        {
+                            element.classList.add('selected')
+                        }
+                    });
+                    this.listFilesEl.dispatchEvent(this.onSelectionChange);
+                    return true;
+                }
+            }
+            
+            if(!e.ctrlKey)
+            {
+                this.listFilesEl.querySelectorAll('li.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
+            }
+            li.classList.toggle('selected');
+
+            this.listFilesEl.dispatchEvent(this.onSelectionChange);
+        });
     }
 
     readFiles()
