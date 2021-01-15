@@ -43,9 +43,40 @@ class DropboxController
         return this.listFilesEl.querySelectorAll('.selected');
     }
 
+    removeTask()
+    {
+        let promises = [];
+
+        this.getSelection().forEach(li => {
+            let file = JSON.parse(li.dataset.file);
+            let key = li.dataset.key;
+            
+            let formData = new FormData();
+            formData.append('path', file.path);
+            formData.append('key', key);
+
+            promises.push(this.ajax('/file', 'DELETE', formData));
+        });
+
+        return Promise.all(promises);
+    }
+
     initEvents()
     {
-        this.btnRename.addEventListener('click', e => {
+        this.btnDelete.addEventListener('click', e => {
+            this.removeTask().then(responses => {
+                responses.forEach(resp => {
+                    if(resp.fields.key)
+                    {
+                        this.getFirebaseRef().child(resp.fields.key).remove();
+                    }
+                })
+            }).catch(err => {
+                console.log(err);
+            });
+        });
+
+        this.btnRename.addEventListener('click', () => {
             let li = this.getSelection()[0];
             let file = JSON.parse(li.dataset.file);
 
@@ -84,9 +115,9 @@ class DropboxController
 
         this.inputFilesEl.addEventListener('change', event => {
             this.btnSendFileEl.disabled = true;
+
             this.uploadTask(event.target.files).then(responses => {
                 responses.forEach(resp => {
-                    
                     this.getFirebaseRef().push().set(resp.files['input-file']);
                 });
 
@@ -116,41 +147,44 @@ class DropboxController
     {
         this.snackModalEl.style.display = show ? 'block' : 'none';
     }
+
+    ajax(url, method = 'GET', formData = new FormData(), onprogress = () => {}, onloadstart = () => {})
+    {
+        return new Promise((resolve, reject) => {
+
+            let ajax = new XMLHttpRequest();
+            ajax.open(method, url);
+    
+            ajax.onload = () => {
+                try
+                {
+                    resolve(JSON.parse(ajax.responseText));
+                }
+                catch(e)
+                {
+                    reject(e);
+                }
+            };
+    
+            ajax.onerror = e => {
+                reject(e);
+            };
+    
+            // chama a função a cada modificação no progresso do upload dos arquivos
+            ajax.upload.onprogress = onprogress;
+            
+            onloadstart(); // captura a data atual no momento do envio dos arquivos
+            ajax.send(formData);
+        })
+    }
     uploadTask(files)
     {
         let promises = [];
-
+        
         [...files].forEach(file => {
-            promises.push(new Promise((resolve, reject) => {
-                let ajax = new XMLHttpRequest();
-                ajax.open('POST', '/upload');
-
-                ajax.onload = () => {
-                    try
-                    {
-                        resolve(JSON.parse(ajax.responseText));
-                    }
-                    catch(e)
-                    {
-                        reject(e);
-                    }
-                };
-
-                ajax.onerror = e => {
-                    reject(e);
-                };
-
-                // chama a função a cada modificação no progresso do upload dos arquivos
-                ajax.upload.onprogress = e => {
-                    this.uploadProgress(e, file);
-                };
-                
-                let formData = new FormData();
-                formData.append('input-file', file);
-                
-                this.startUploadTime = Date.now(); // captura a data atual no momento do envio dos arquivos
-                ajax.send(formData);
-            }));
+            let formData = new FormData();
+            formData.append('input-file', file);
+            promises.push(this.ajax('/upload', 'POST', formData, e => this.uploadProgress(e, file), () => this.startUploadTime = Date.now()));
         });
         // pega o array com promisses e retorna o resolve se todas executarem com sucesso
         return Promise.all(promises);
