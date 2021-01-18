@@ -61,4 +61,10 @@ typings/
 .next
 
 #images and files test
-app/upload/
+app/upload/*.jpg
+app/upload/*.jpeg
+app/upload/*.png
+app/upload/*.mp3
+app/upload/*.ogg
+app/upload/*.mp4
+app/upload/*.exe

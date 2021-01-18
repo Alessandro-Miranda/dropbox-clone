@@ -65,7 +65,7 @@ class DropboxController
 
     initEvents()
     {
-        this.btnNewFolder.addEventListener('click', e => {
+        this.btnNewFolder.addEventListener('click', () => {
             let name = prompt('Nome da nova pasta');
 
             if(name)
@@ -78,7 +78,7 @@ class DropboxController
             }
         })
 
-        this.btnDelete.addEventListener('click', e => {
+        this.btnDelete.addEventListener('click', () => {
             this.removeTask().then(responses => {
                 responses.forEach(resp => {
                     if(resp.fields.key)
