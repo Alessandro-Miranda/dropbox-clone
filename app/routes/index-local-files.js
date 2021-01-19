@@ -1,3 +1,5 @@
+// Este arquivo de rota captura os dados para salvar os arquivos no disco local
+
 var express = require('express');
 var router = express.Router();
 var formidable = require('formidable');

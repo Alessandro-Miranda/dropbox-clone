@@ -1,3 +1,4 @@
+//Está classe armazena os arquivos do drop box diretamente no disco local onde está o servidor
 class DropboxController
 {
     constructor()
@@ -130,15 +131,10 @@ class DropboxController
 
         this.inputFilesEl.addEventListener('change', event => {
             this.btnSendFileEl.disabled = true;
-            // alterar este trecho pois a forma de inserir arquivos no firebase storage foi alterada
+
             this.uploadTask(event.target.files).then(responses => {
                 responses.forEach(resp => {
-                    this.getFirebaseRef().push().set({
-                        name: resp.name,
-                        type: resp.contentType,
-                        path: resp.fullPath,
-                        size: resp.size
-                    });
+                    this.getFirebaseRef().push().set(resp.files['input-file']);
                 });
 
                 this.uploadComplete();
@@ -204,31 +200,9 @@ class DropboxController
         let promises = [];
         
         [...files].forEach(file => {
-            promises.push(new Promise((resolve, reject) => {
-                // cria um arquivo com o nome passado no child dentro da referencia indicada
-                let fileRef = firebase.storage().ref(this.currentFolder.join('/')).child(file.name); 
-                let task = fileRef.put(file);
-    
-                // o task retorna o progresso do envio, se já foi concluido, quando foi concluido, se deu erro etc
-                // ele recebe 3 funções: 1 para o progresso, outra se der erro e outra para a conclusão
-                task.on('state_changed', snapshot => {
-                    
-                    this.uploadProgress({
-                        loaded: snapshot.bytesTransferred,
-                        total: snapshot.totalBytes
-                    }, file);
-
-                }, error => {
-                    reject(error);
-                }, () => {
-                    fileRef.getMetadata().then(metadata => {
-                        resolve(metadata);
-                    }).catch(err => {
-                        reject(err);
-                    });
-                })
-                
-            }));
+            let formData = new FormData();
+            formData.append('input-file', file);
+            promises.push(this.ajax('/upload', 'POST', formData, e => this.uploadProgress(e, file), () => this.startUploadTime = Date.now()));
         });
         // pega o array com promisses e retorna o resolve se todas executarem com sucesso
         return Promise.all(promises);
@@ -573,13 +547,13 @@ class DropboxController
     {
         this.lastFolder = this.currentFolder.join('/');
 
-        this.getFirebaseRef().on('value', snapshot => {
+        this.getFirebaseRef().on('value', snapshoot => {
             
             this.listFilesEl.innerHTML = '';
             
-            snapshot.forEach(snapshotItem => {
-                let key = snapshotItem.key;
-                let data = snapshotItem.val();
+            snapshoot.forEach(snapshootItem => {
+                let key = snapshootItem.key;
+                let data = snapshootItem.val();
 
                 if(data.type)
                 {
