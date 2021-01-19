@@ -188,9 +188,7 @@ class DropboxController
                 }
             };
     
-            ajax.onerror = e => {
-                reject(e);
-            };
+            ajax.onerror = e => reject(e);
     
             // chama a função a cada modificação no progresso do upload dos arquivos
             ajax.upload.onprogress = onprogress;
@@ -226,7 +224,7 @@ class DropboxController
                     }).catch(err => {
                         reject(err);
                     });
-                })
+                });
                 
             }));
         });
@@ -270,7 +268,7 @@ class DropboxController
         }
         else
         {
-            return '';
+            return '0 segundos';
         }
     }
 
